@@ -1,4 +1,62 @@
-# 通到 QQ（dsh-qq-link）
+# 通到 QQ · Plus（dsh-qq-link-plus）
+
+本项目派生自 [Yuuyuko-uu/dsh-qq-link](https://github.com/Yuuyuko-uu/dsh-qq-link)，原作者 **Yuuyuko-uu**。
+Plus 在原版消息转发和会话映射基础上新增 **QQ 历史记录导入、按时间分段阅读、摘要承接和断点续传**，
+通过 [dsh-fish-memory-plus](https://github.com/CHINOSAMAAA/dsh-fish-memory-plus) 的 HTTP 接口写入长期记忆；
+记忆插件同样派生自 Yuuyuko-uu 的 [dsh-fish-memory](https://github.com/Yuuyuko-uu/dsh-fish-memory)，当前保持原版接口兼容。
+保留原作者署名和 [LICENSE](LICENSE)。本地修改不代表已经发布或完成真实 QQ / DeepSeek 联调。
+
+## Plus：导入聊天记录
+
+先安装本插件与「鱼的记忆 Plus」，重启 DSH。安装来源都使用自己的 fork（`--profile` 按实际环境替换）：
+
+```bash
+dsh plugin --profile desktop add github:CHINOSAMAAA/dsh-qq-link-plus
+dsh plugin --profile desktop add github:CHINOSAMAAA/dsh-fish-memory-plus
+```
+
+**不要同时启用原版 QQ 插件和 Plus**，它们使用相同的路由、设置槽位和配置文件。
+记忆 Plus 当前仍使用原版包名 `dsh-fish-memory` 和 `/dsh-fish-memory/*` 接口；安装来源以 fork 地址为准，不要另装一份上游版本。
+已装原版时先移除 `dsh-qq-link`，已有绑定和收图数据仍使用 `DSH_HOME`（默认 `~/.dsh`）中的原位置。
+
+1. 在目标会话选择 **DeepSeek**，打开该会话；本功能复用宿主 `llm`，不另存 API key。
+2. 在「鱼的记忆」打开记忆功能及目标会话，使用**按会话**模式。工作区共享模式会被导入页面挡下，避免私聊历史被其他会话共享。
+3. 在「通到 QQ → 绑定」保存 QQ 私聊/群与目标 DSH 会话的对应关系，然后进入「历史导入」。导入可在实时转发总开关关闭时使用。
+4. 选择绑定，选择下表中的读取方式，点**读取并预览**。核对聊天对象、目标会话、消息数、起止时间和停止原因。
+5. 如果历史中的某个 QQ 代表 AI 自己，可填写「AI 对应的 QQ 号」；留空时全部按原发言人姓名与 QQ 记述，不认领他人的经历。
+6. 点**开始 / 继续整理并写入记忆**。每段完整文本送给目标会话的模型，上一段的累积摘要带到下一段。关闭设置页会在当前段结束后停止，重开后可从「恢复已有任务」继续。
+7. 在「鱼的记忆」查看结果；可用原插件的扩词、编辑、删除功能核对整理结果。已经由模型整理过，不必再点「开始提炼」。
+
+| 读取方式 | 支持范围 |
+| --- | --- |
+| QQ 后端直接读取 | 已配置的 OneBot HTTP 后端，私聊 / 群均可；`get_friend_msg_history` / `get_group_msg_history`，`message_seq` 反向分页，默认最多 100 页，每页请求 100 条，可设 1～1000 页 |
+| QCE 导出 | [QQ Chat Exporter](https://github.com/shuakami/qq-chat-exporter) 的**单文件 JSON**：`chatInfo` + `messages[]`，保留 `sender`、`timestamp`、`content.elements` / `content.text`；也接受 OneBot 消息数组或 `data.messages` JSON |
+| QQ 原生 TXT | UTF-8 或 GB18030，消息头为 `2026-11-01 12:30:00 昵称(12345)`，正文可跨多行；`/` 日期分隔符、中文括号和 `<邮箱>` 标识也可用 |
+
+**边界与存储：**
+
+- 单文件最大 50 MB、单任务最多 10 万条。QCE 请导出单文件 JSON，暂不支持 HTML、Excel、JSONL、加密 `.bak`。更大的历史先分文件导出，各文件分别建立摘要链。
+- 每段最多 6000 字符，超长单条继续切段且保留尾部；每段最多一次成功的模型分析，携带最多 2000 字符的承接摘要。模型失败、输出格式错误、输出截断不推进进度，单次模型请求设置 180 秒中止信号。
+- 「完整读取」指所选文件 / 后端可见范围内的**文本逐段送入模型**，不是将所有记录一次塞入模型上下文，也不保证模型永久记住每句话。后端空页、重复页、缺游标、达到上限都会显示原因，**不能据此证明 QQ 云端记录完整**。
+- 图片、语音、文件、未展开的合并转发等保留类型和标识，**不下载、不做 OCR / ASR、不补取转发正文**。只有导出中已包含的正文可供阅读。
+- 归一化文本和切段存在 `DSH_HOME/qq-history-imports/<内容哈希>.source.json`；进度、每段摘要、模型结果和写入回执存在同名 `.json`。保留人物标识，文本无时间则记为未知。没有时区的 QQ TXT 按北京时间（UTC+8）解释。
+- 同一份规范化记录、同一目标与身份设置再次导入会恢复原任务。写入成功但进度确认丢失时，重试沿用已保存结果，由原插件 `/import/apply` 去重、尊重已删除记录；原插件可能合并近似记忆或跳过不值得记的内容，这些回执也会保留。
+- 导入不调用 `agent.followup`、不向 QQ 发消息、不改变实时收信水位。开始整理会把聊天文本发送给**目标会话配置的模型服务**并消耗额度。暂时关闭页面不会撤回已发出的模型请求或已写入的记忆。
+- 记忆查询和召回仍由鱼的记忆 Plus 负责；本插件不直接改写它的 JSON 文件。导入原文和摘要不会自动清理，删除记忆时如需同时清除导入档案，应在停止导入后删除相应的两个本地文件。
+
+接口位于 `/dsh-qq-bridge/history/`：`GET jobs`、`POST prepare`、`POST analyze`、`POST commit`，沿用本人管理鉴权；写请求额外限定 JSON、检查来源、限制体积。浏览器使用同源登录态调用 `/dsh-fish-memory/list` 和 `/dsh-fish-memory/import/apply`，无需另填地址或令牌。
+
+验证命令（无需 QQ 登录或模型 key；契约验证另需在同级目录检出自己的记忆 fork）：
+
+```bash
+npm test
+FISH_MEMORY_SOURCE=../dsh-fish-memory-plus/lib/index.js node --test tests/history-import.test.mjs
+```
+
+当前对接仓库：`CHINOSAMAAA/dsh-fish-memory-plus`，基线为上游 `dsh-fish-memory` **1.5.2**（`5124cc1fa5a3149e8a68cf1d858e24b5bf2a2eea`）。
+原版接口不是版本化协议；后续修改记忆 Plus 时应保留上述契约或同步调整此模块。记忆侧的后续修改应提交到自己的 fork，不修改上游仓库。
+
+以下为原版功能说明（安装来源已指向 Plus）。
 
 让 DSH 里的 **AI 伙伴**和 QQ 连起来：它在 DSH 里说完话，自动发到 QQ。
 
@@ -45,7 +103,7 @@
 真遇到新版对不上（比如 DSH 刚升级、插件还没跟上），提个 issue，作者会跟着改。
 
 实测对照 / 兼容范围看 [`package.json`](package.json) 里的 `engines` 和 `dsh.compatibility`；
-这一版改了什么看 [CHANGELOG.md](CHANGELOG.md)，发版记录看 [Releases](https://github.com/Yuuyuko-uu/dsh-qq-link/releases)。
+这一版改了什么看 [CHANGELOG.md](CHANGELOG.md)，发版记录看 [Releases](https://github.com/CHINOSAMAAA/dsh-qq-link-plus/releases)。
 这里不写死版本号 —— 文档里钉一个数，过两天就对不上了。
 
 ## 装
@@ -57,13 +115,13 @@
 打开 **设置 → 插件 → 安装**，把这一行填进去：
 
 ```
-github:Yuuyuko-uu/dsh-qq-link
+github:CHINOSAMAAA/dsh-qq-link-plus
 ```
 
 或者命令行（`--profile` 照你平时那个写，桌面端一般 `desktop`，网页端 `web`）：
 
 ```bash
-dsh plugin --profile desktop add github:Yuuyuko-uu/dsh-qq-link
+dsh plugin --profile desktop add github:CHINOSAMAAA/dsh-qq-link-plus
 ```
 
 装完**重启一次 DSH**，然后进 **设置 → 通到 QQ**。
@@ -72,7 +130,7 @@ dsh plugin --profile desktop add github:Yuuyuko-uu/dsh-qq-link
 > 没装 git 会报 `ERR_PNPM_GIT_FETCH_FAILED`。这种情况改用 **tarball 直链**，不用 git：
 >
 > ```bash
-> dsh plugin --profile desktop add https://codeload.github.com/Yuuyuko-uu/dsh-qq-link/tar.gz/refs/heads/main
+> dsh plugin --profile desktop add https://codeload.github.com/CHINOSAMAAA/dsh-qq-link-plus/tar.gz/refs/heads/main
 > ```
 >
 > （设置 → 插件 → 安装 那个框里也可以直接填这行地址。）
@@ -128,8 +186,8 @@ $p = "把上面 BOM=True 那一行的路径粘到这里"
 命令行（`--profile` 照你平时那个写，桌面端一般 `desktop`、网页端 `web`）：
 
 ```bash
-dsh plugin --profile desktop remove dsh-qq-link
-dsh plugin --profile desktop add github:Yuuyuko-uu/dsh-qq-link
+dsh plugin --profile desktop remove dsh-qq-link-plus
+dsh plugin --profile desktop add github:CHINOSAMAAA/dsh-qq-link-plus
 ```
 
 > ⚠️ **必须先卸再装**：直接装可能拿到缓存里的旧副本，装完还是老的。
@@ -325,7 +383,7 @@ send_qzone_msg              发说说
 | 能力 | 用在哪 | 边界 |
 |---|---|---|
 | **网络** | 连你本机的 QQ 后端（默认 `127.0.0.1:3000`，NapCat / SnowLuma 的 OneBot 11 HTTP） | 只连你填的那个地址；不往别处发。收图时会去图床地址下载（QQ 消息里带的 url） |
-| **文件** | 收进来的图存在 `~/.dsh/qq-bridge-inbox/`；配置和状态在 `~/.dsh/`（`qq-bridge-config.json` / `qq-bridge-state.json`） | 只碰这两个地方；不扫别的目录 |
+| **文件** | 收图在 `~/.dsh/qq-bridge-inbox/`；配置和状态在 `~/.dsh/`；Plus 的导入文本、摘要和进度在 `~/.dsh/qq-history-imports/`（设置了 `DSH_HOME` 则使用该目录） | 不扫描其他目录；导入文件由用户在页面上选择 |
 | **命令** | 只有你**自己填了**「语音转写命令」才会跑一条本地命令（比如 `python tools/asr_cli.py {file}`） | 不填就完全不跑；不装额外依赖 |
 | **凭据** | 「令牌」那一栏（QQ 后端的 access token），存在配置文件里 | 只用来连你自己填的那个后端；不要把它贴进公开 issue |
 | **公开发东西** | `qq_space_post` 能往你这个 QQ 号的空间里发说说 | 默认关（「允许发 QQ 空间动态」）；关着时一个请求都不发。开着就是**公开可见**，发出去得自己去删 |

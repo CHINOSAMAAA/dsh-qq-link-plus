@@ -45,7 +45,7 @@ const exports = 捕获.factory(假require)
 let 挂了 = 0
 const 报 = (标签, 过, 详情) => { if (!过) 挂了++; console.log(`${过 ? 'PASS' : 'FAIL'}  ${标签}${详情 ? '  :: ' + 详情 : ''}`) }
 
-报('模块 id = dsh-qq-link', 捕获.id === 'dsh-qq-link', 捕获.id)
+报('模块 id = dsh-qq-link-plus', 捕获.id === 'dsh-qq-link-plus', 捕获.id)
 报('inject 只依赖 slots', Array.isArray(exports.inject) && exports.inject.join() === 'slots')
 
 let 注册 = null
@@ -104,9 +104,9 @@ if (绑定钮) {
 }
 
 // ⭐ 1.5.0：页签改成 总览 / 绑定 / 消息 / 空间 / 门槛 / 更新，六个都得在
-const 页签名们 = ['总览', '绑定', '消息', '空间', '门槛', '更新']
+const 页签名们 = ['总览', '绑定', '历史导入', '消息', '空间', '门槛', '更新']
 const 缺页签 = 页签名们.filter((名) => !找按钮(树, 名))
-报('六个页签都在（总览 / 绑定 / 消息 / 空间 / 门槛 / 更新）', 缺页签.length === 0,
+报('七个页签都在（含历史导入）', 缺页签.length === 0,
   缺页签.length ? '缺：' + 缺页签.join('、') : 页签名们.join(' / '))
 
 // 通用查找：按类型 + 属性找控件（input 的 type / select 之类）
@@ -120,6 +120,13 @@ const 找控件 = (节点, 条件, 出 = []) => {
   找控件(节点.kids, 条件, 出)
   return 出
 }
+
+找按钮(树, '历史导入').p.onClick()
+下标 = 0
+const 历史树 = 组件()
+const 历史文 = JSON.stringify(历史树)
+报('历史导入有三种入口、预览与恢复', ['QCE 单文件 JSON', 'OneBot JSON', 'QQ 原生 TXT', '从 QQ 后端读取并预览', '恢复已有任务', 'AI 对应的 QQ'].every(t => 历史文.includes(t)))
+报('文件选择限定 JSON / TXT', 找控件(历史树, n => n.t === 'input' && n.p.type === 'file').some(n => n.p.accept === '.json,.txt'))
 
 // ⭐ 1.5.0：「消息」页不再有「QQ 空间」那张卡（搬到「空间」页了）
 const 消息钮 = 找按钮(树, '消息')
@@ -190,6 +197,48 @@ if (更新钮) {
   报('更新页里有「检查更新」按钮', Boolean(找按钮(树6, '检查更新')))
   报('更新页里没有「转发进来会变成什么样」那张卡', !文6.includes('转发进来会变成什么样'))
 }
+
+// Plus：模拟用户选择绑定和文件，验证同源记忆写入、错误不推进、恢复后完成。
+状态槽 = [初始态, false, false, '', null, false, '历史导入']
+const 渲历史 = () => { 下标 = 0; return 组件() }
+let 历史界面 = 渲历史()
+找控件(历史界面, n => n.p['aria-label'] === '历史导入绑定')[0].p.onChange({ target: { value: '0' } })
+找控件(历史界面, n => n.p.type === 'file')[0].p.onChange({ target: { files: [{ name: 'qq.txt', size: 4,
+  arrayBuffer: async () => new Uint8Array([0xc4, 0xe3, 0xba, 0xc3]).buffer }] } })
+const 历史请求们 = []
+let 工作区模式 = true, 写入失败 = true
+let 任务 = { id: 'a'.repeat(64), session: 'session-X', binding: { 类型: '群', 号码: '123456' }, filename: 'qq.txt',
+  count: 2, duplicates: 0, format: 'QQ TXT', start: null, end: null, total: 2, completed: 0, done: false, preview: '你好' }
+globalThis.fetch = async (url, options = {}) => {
+  const path = String(url), body = options.body ? JSON.parse(options.body) : null
+  历史请求们.push({ path, body })
+  let data
+  if (path.endsWith('/history/jobs')) data = { ok: true, jobs: [任务] }
+  else if (path.endsWith('/history/prepare')) data = { ok: true, job: 任务 }
+  else if (path.endsWith('/dsh-fish-memory/list')) data = { ok: true, 全局开关: true, 模式: 工作区模式 ? 'workspace' : 'session', sessions: [{ id: 'session-X', enabled: true }] }
+  else if (path.endsWith('/history/analyze')) data = { ok: true, pending: { token: 'token', items: [{ text: '记忆', importance: 0.5 }] }, job: 任务 }
+  else if (path.endsWith('/dsh-fish-memory/import/apply')) data = 写入失败 ? { ok: false, message: '模拟写入失败' } : { ok: true, added: 1 }
+  else if (path.endsWith('/history/commit')) {
+    任务 = { ...任务, completed: 任务.completed + 1, done: 任务.completed + 1 === 任务.total }
+    data = { ok: true, job: 任务 }
+  } else throw new Error('不该请求的地址：' + path)
+  return { ok: true, json: async () => data }
+}
+历史界面 = 渲历史()
+await 找按钮(历史界面, '读取文件并预览').p.onClick()
+报('旧版 GB18030 TXT 在浏览器转为正确中文再上传', 历史请求们.find(x => x.path.endsWith('/prepare'))?.body.content === '你好')
+历史界面 = 渲历史()
+await 找按钮(历史界面, '开始 / 继续整理并写入记忆').p.onClick()
+报('工作区共享模式不开始导入', !历史请求们.some(x => x.path.endsWith('/analyze')) && JSON.stringify(渲历史()).includes('按会话模式'))
+工作区模式 = false
+await 找按钮(渲历史(), '开始 / 继续整理并写入记忆').p.onClick()
+报('写入失败不确认导入进度', !历史请求们.some(x => x.path.endsWith('/commit')) && JSON.stringify(渲历史()).includes('模拟写入失败'))
+写入失败 = false
+await 找按钮(渲历史(), '开始 / 继续整理并写入记忆').p.onClick()
+报('继续导入完整处理两段，记忆只发给所选会话', 任务.done && 任务.completed === 2
+  && 历史请求们.filter(x => x.path.endsWith('/import/apply')).every(x => x.body.session === 'session-X'))
+报('历史导入完成后按钮禁用，不会发送 QQ 消息', 找按钮(渲历史(), '已完成')?.p.disabled === true
+  && 历史请求们.every(x => !x.path.includes('send_')))
 
 console.log(`\n${挂了 === 0 ? '全部通过 ✅' : `有 ${挂了} 条没过 ❌`}`)
 process.exitCode = 挂了 === 0 ? 0 : 1

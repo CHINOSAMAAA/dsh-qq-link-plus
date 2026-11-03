@@ -1,7 +1,10 @@
 {
-  "name": "dsh-qq-link",
-  "version": "1.5.1",
-  "description": "通到 QQ：DSH 里的 AI 伙伴和 QQ 双向互通 —— 它说完话自动发到 QQ，你在 QQ 里说的话自动转进 DSH。走 OneBot 11 HTTP（SnowLuma / NapCat 都行）。",
+  "name": "dsh-qq-link-plus",
+  "version": "1.5.2",
+  "description": "派生自 Yuuyuko-uu/dsh-qq-link：QQ 双向互通、会话映射及 QQ 历史分段阅读与鱼的记忆对接。",
+  "scripts": {
+    "test": "node --test tests/*.mjs"
+  },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=22",
@@ -44,11 +47,11 @@
   "author": "Yuuyuko-uu (https://github.com/Yuuyuko-uu)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Yuuyuko-uu/dsh-qq-link.git"
+    "url": "git+https://github.com/CHINOSAMAAA/dsh-qq-link-plus.git"
   },
-  "homepage": "https://github.com/Yuuyuko-uu/dsh-qq-link#readme",
+  "homepage": "https://github.com/CHINOSAMAAA/dsh-qq-link-plus#readme",
   "bugs": {
-    "url": "https://github.com/Yuuyuko-uu/dsh-qq-link/issues"
+    "url": "https://github.com/CHINOSAMAAA/dsh-qq-link-plus/issues"
   },
   "publishConfig": {
     "access": "public",
