@@ -72,7 +72,7 @@ const 初始态 = {
 状态槽 = [初始态]
 const 树 = 组件()
 const 文 = JSON.stringify(树)
-const 要有 = ['通到 QQ', '总开关', '试运行', '绑定', '总览', '消息', '空间', '门槛', '更新', '测试一句', '保存设置', '连着的 QQ：测试号（10001）']
+const 要有 = ['通到 QQ', '配置', '历史导入', '总览', '更新', '发送测试消息', '保存设置', '已连接 QQ：测试号（10001）']
 const 缺 = 要有.filter((x) => !文.includes(x))
 报('关键元素都渲染出来（含连接状态 + 目标会话标题）', 缺.length === 0, 缺.length ? '缺：' + 缺.join('、') : 文.length + ' 字节')
 
@@ -89,24 +89,24 @@ const 找按钮 = (节点, 文字) => {
   if (Array.isArray(节点.kids) && 节点.kids.includes(文字) && 节点.p && typeof 节点.p.onClick === 'function') return 节点
   return 找按钮(节点.kids, 文字)
 }
-const 绑定钮 = 找按钮(树, '绑定')
-报('能找到「绑定」页签', Boolean(绑定钮))
+const 绑定钮 = 找按钮(树, '配置')
+报('能找到统一配置入口', Boolean(绑定钮))
 if (绑定钮) {
   绑定钮.p.onClick()
   下标 = 0
   const 树2 = 组件()
   const 文2 = JSON.stringify(树2)
-  const 要有2 = ['人设（选填）', '给聊天带上人设', '单独', '群里怎么回（对所有群生效）', '两条之间至少隔（秒）']
+  const 要有2 = ['全局角色设定', '启用角色设定', '独立', '群聊频率与概率', '回复冷却时间（秒）']
   const 缺2 = 要有2.filter((x) => !文2.includes(x))
-  报('绑定行有「启用 / 只听 @」两个开关',
-    文2.includes('启用（关掉 = 这个聊天不收了，也不发）') && 文2.includes('只听 @ 我的'), '')
-  报('绑定页里人设卡 + 那一列都在', 缺2.length === 0, 缺2.length ? '缺：' + 缺2.join('、') : 文2.length + ' 字节')
+  报('绑定行保留收发与点名开关',
+    文2.includes('启用收发') && 文2.includes('仅接收点名消息'), '')
+  报('配置页保留角色设定与群聊策略', 缺2.length === 0, 缺2.length ? '缺：' + 缺2.join('、') : 文2.length + ' 字节')
 }
 
 // ⭐ 1.5.0：页签改成 总览 / 绑定 / 消息 / 空间 / 门槛 / 更新，六个都得在
-const 页签名们 = ['总览', '绑定', '历史导入', '消息', '空间', '门槛', '更新']
+const 页签名们 = ['总览', '配置', '历史导入', '更新']
 const 缺页签 = 页签名们.filter((名) => !找按钮(树, 名))
-报('七个页签都在（含历史导入）', 缺页签.length === 0,
+报('四个页签完整，配置入口统一', 缺页签.length === 0,
   缺页签.length ? '缺：' + 缺页签.join('、') : 页签名们.join(' / '))
 
 // 通用查找：按类型 + 属性找控件（input 的 type / select 之类）
@@ -125,64 +125,64 @@ const 找控件 = (节点, 条件, 出 = []) => {
 下标 = 0
 const 历史树 = 组件()
 const 历史文 = JSON.stringify(历史树)
-报('历史导入有三种入口、预览与恢复', ['QCE 单文件 JSON', 'OneBot JSON', 'QQ 原生 TXT', '从 QQ 后端读取并预览', '恢复已有任务', 'AI 对应的 QQ'].every(t => 历史文.includes(t)))
+报('历史导入有三种入口、预览与恢复', ['QCE 单文件 JSON', 'OneBot JSON', 'QQ 原生 TXT', '读取后端记录', '已保存任务', 'AI 对应的 QQ'].every(t => 历史文.includes(t)))
 报('文件选择限定 JSON / TXT', 找控件(历史树, n => n.t === 'input' && n.p.type === 'file').some(n => n.p.accept === '.json,.txt'))
 
 // ⭐ 1.5.0：「消息」页不再有「QQ 空间」那张卡（搬到「空间」页了）
-const 消息钮 = 找按钮(树, '消息')
-报('能找到「消息」页签', Boolean(消息钮))
+const 消息钮 = 找按钮(树, '配置')
+报('消息设置可从配置页访问', Boolean(消息钮))
 if (消息钮) {
   消息钮.p.onClick()
   下标 = 0
   const 树3 = 组件()
   const 文3 = JSON.stringify(树3)
-  const 要有3 = ['连到哪个 QQ 后端', '发出去的样子', '收进来的样子', '图片', '语音转写（QQ 语音条 → 文字）']
+  const 要有3 = ['QQ 后端连接', '发送格式', '接收与合并', '图片', '语音转写']
   const 缺3 = 要有3.filter((x) => !文3.includes(x))
-  报('消息页里原来那几张卡都还在', 缺3.length === 0, 缺3.length ? '缺：' + 缺3.join('、') : 文3.length + ' 字节')
-  报('「消息」页里没有「QQ 空间」那张卡了', !文3.includes('允许发 QQ 空间动态'))
+  报('配置页保留全部消息与媒体设置', 缺3.length === 0, 缺3.length ? '缺：' + 缺3.join('、') : 文3.length + ' 字节')
+  报('配置页集中显示空间设置', 文3.includes('允许发布 QQ 空间动态'))
 }
 
 // ⭐ 1.5.0：「空间」页四张卡的关键控件
-const 空间钮 = 找按钮(树, '空间')
-报('能找到「空间」页签', Boolean(空间钮))
+const 空间钮 = 找按钮(树, '配置')
+报('空间设置可从配置页访问', Boolean(空间钮))
 if (空间钮) {
   空间钮.p.onClick()
   下标 = 0
   const 树4 = 组件()
   const 文4 = JSON.stringify(树4)
-  const 要有4 = ['允许发 QQ 空间动态', '定时发说说', '可见范围', '所有人', '好友', '仅自己',
-    '多久看一圈（分钟）', '自动点赞', '允许评论']
+  const 要有4 = ['允许发布 QQ 空间动态', '定时发布', '可见范围', '所有人', '好友', '仅自己',
+    '同步间隔（分钟）', '自动点赞', '允许评论']
   const 缺4 = 要有4.filter((x) => !文4.includes(x))
-  报('「空间」页四张卡的关键控件都渲染出来了', 缺4.length === 0, 缺4.length ? '缺：' + 缺4.join('、') : 文4.length + ' 字节')
-  报('定时那条表格：一行有一条时间框 + 可见范围下拉 + 启用勾 + 删',
+  报('空间区域保留全部关键控件', 缺4.length === 0, 缺4.length ? '缺：' + 缺4.join('、') : 文4.length + ' 字节')
+  报('定时条目保留时间、可见范围、开关与删除操作',
     Boolean(找控件(树4, (n) => n.t === 'input' && n.p.type === 'time').length)
       && Boolean(找控件(树4, (n) => n.t === 'select').length)
       && Boolean(找控件(树4, (n) => n.t === 'input' && n.p.type === 'checkbox').length)
-      && Boolean(找按钮(树4, '删')))
+      && Boolean(找按钮(树4, '删除')))
   const 数字框 = 找控件(树4, (n) => n.t === 'input' && n.p.type === 'number')
   报('看圈分钟是个 5～1440 的数字框', 数字框.some((n) => String(n.p.min) === '5' && String(n.p.max) === '1440'),
     JSON.stringify(数字框.map((n) => [n.p.min, n.p.max])))
   报('点赞 / 评论是两个 checkbox（默认都不勾）', 找控件(树4, (n) => n.t === 'input' && n.p.type === 'checkbox' && n.p.checked === false).length >= 2)
 
   // 定时表空着的时候要有一句提示（另起一次渲染，配置里清空）
-  状态槽 = [{ ...初始态, 配置: { ...初始态.配置, 空间定时发: [] } }, false, false, '', null, false, '空间']
+  状态槽 = [{ ...初始态, 配置: { ...初始态.配置, 空间定时发: [] } }, false, false, '', null, false, '绑定']
   下标 = 0
   const 树空 = 组件()
-  报('定时表空着时给一句「还没有 —— 点下面的「+ 加一条」」',
-    JSON.stringify(树空).includes('还没有 —— 点下面的「+ 加一条」'))
+  报('空列表显示添加提示',
+    JSON.stringify(树空).includes('暂无条目，请添加。'))
 }
 
 // ⭐ 1.5.0：「门槛」页里「转发进来会变成什么样」那张卡整块删掉了
-const 门槛钮 = 找按钮(树, '门槛')
-报('能找到「门槛」页签', Boolean(门槛钮))
+const 门槛钮 = 找按钮(树, '配置')
+报('回复门槛可从配置页访问', Boolean(门槛钮))
 if (门槛钮) {
   门槛钮.p.onClick()
   下标 = 0
   const 树5 = 组件()
   const 文5 = JSON.stringify(树5)
-  const 要有5 = ['点名之后接着听几条', '接着听多少秒']
+  const 要有5 = ['点名后续接收上限（条）', '点名后续接收时限（秒）']
   const 缺5 = 要有5.filter((x) => !文5.includes(x))
-  报('门槛页里有「点名之后接着听几条 / 接着听多少秒」', 缺5.length === 0, 缺5.length ? '缺：' + 缺5.join('、') : 文5.length + ' 字节')
+  报('群聊区域保留后续消息数量及时限设置', 缺5.length === 0, 缺5.length ? '缺：' + 缺5.join('、') : 文5.length + ' 字节')
   报('门槛页里没有「转发进来会变成什么样」了', !文5.includes('转发进来会变成什么样'))
 }
 
@@ -225,16 +225,16 @@ globalThis.fetch = async (url, options = {}) => {
   return { ok: true, json: async () => data }
 }
 历史界面 = 渲历史()
-await 找按钮(历史界面, '读取文件并预览').p.onClick()
+await 找按钮(历史界面, '预览文件').p.onClick()
 报('旧版 GB18030 TXT 在浏览器转为正确中文再上传', 历史请求们.find(x => x.path.endsWith('/prepare'))?.body.content === '你好')
 历史界面 = 渲历史()
-await 找按钮(历史界面, '开始 / 继续整理并写入记忆').p.onClick()
+await 找按钮(历史界面, '开始 / 继续导入').p.onClick()
 报('工作区共享模式不开始导入', !历史请求们.some(x => x.path.endsWith('/analyze')) && JSON.stringify(渲历史()).includes('按会话模式'))
 工作区模式 = false
-await 找按钮(渲历史(), '开始 / 继续整理并写入记忆').p.onClick()
+await 找按钮(渲历史(), '开始 / 继续导入').p.onClick()
 报('写入失败不确认导入进度', !历史请求们.some(x => x.path.endsWith('/commit')) && JSON.stringify(渲历史()).includes('模拟写入失败'))
 写入失败 = false
-await 找按钮(渲历史(), '开始 / 继续整理并写入记忆').p.onClick()
+await 找按钮(渲历史(), '开始 / 继续导入').p.onClick()
 报('继续导入完整处理两段，记忆只发给所选会话', 任务.done && 任务.completed === 2
   && 历史请求们.filter(x => x.path.endsWith('/import/apply')).every(x => x.body.session === 'session-X'))
 报('历史导入完成后按钮禁用，不会发送 QQ 消息', 找按钮(渲历史(), '已完成')?.p.disabled === true
