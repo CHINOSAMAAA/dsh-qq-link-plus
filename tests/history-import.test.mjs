@@ -1,6 +1,7 @@
+import { recordSource } from '../lib/memory-sources.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -92,6 +93,8 @@ test('任务恢复、顺序承接、失败重试、写入确认与目标隔离�
         memories: [{ text: `小明和小红在第${p.segment}段商量周末出游，带雨伞。`, at: null, importance: 0.5 }] }) }
       yield { type: 'finish', reason: { kind: mode === 'truncated' ? 'max-tokens' : 'stop' } }
     } } }
+  writeFileSync(join(home, 'qq-bridge-config.json'), JSON.stringify({ 绑定: [binding] }))
+  recordSource(home, { 绑定: [binding] }, '99999', binding, 'fixture-message', ['12345'])
   const mount = () => registerHistoryImport({ ctx, home, route: (path, handler) => routes.set(path, handler),
     config: () => ({ 绑定: [binding] }), findAgent: id => ctx.agents.get(id), headers: () => ({}) })
   const api = (path, body, headers) => request(routes.get('/dsh-qq-bridge/history/' + path), body, headers)
@@ -125,16 +128,16 @@ test('任务恢复、顺序承接、失败重试、写入确认与目标隔离�
       const memory = await import(pathToFileURL(resolve(process.env.FISH_MEMORY_SOURCE)).href)
       memory.apply(ctx)
       const apply = body => request(routes.get('/dsh-fish-memory/import/apply'), body)
-      const body = { session: analysis.job.session, items: analysis.pending.items }
+      const body = { session: analysis.job.session, storeId: prepared.job.memoryStoreId, items: analysis.pending.items }
       receipt = await apply(body)
       assert.equal(receipt.ok, true)
       assert.equal(receipt.added, 1)
       assert.equal((await apply(body)).added, 0, '已写入后重试应去重')
-      const stored = JSON.parse(readFileSync(join(home, 'fish-memory/session-X.json'), 'utf8'))
+      const stored = JSON.parse(readFileSync(join(home, 'fish-memory/' + prepared.job.memoryStoreId + '.json'), 'utf8'))
       assert.equal(stored.memories.length, 1)
       assert.equal(stored.memories[0].at, null)
       assert.match(stored.memories[0].source, /QQ历史\//)
-      const deletion = await request(routes.get('/dsh-fish-memory/delete'), { session: 'session-X', id: stored.memories[0].id })
+      const deletion = await request(routes.get('/dsh-fish-memory/delete'), { session: 'session-X', storeId: prepared.job.memoryStoreId, id: stored.memories[0].id })
       assert.equal(deletion.ok, true)
       const reimport = await apply(body)
       assert.equal(reimport.added, 0)

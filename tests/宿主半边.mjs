@@ -21,6 +21,8 @@ process.env.DSH_HOME = 家
 //   群聊节奏另有自己的测试（tests/群节奏.mjs）。
 const writeFileSync = (路, 数据, ...余) => {
   if (String(路).endsWith('qq-bridge-config.json')) {
+    // 每段是独立的合成场景，不能把上段的可信身份带进新的绑定。
+    rmSync(join(家, 'qq-bridge-memory-sources.json'), { force: true })
     try {
       const o = JSON.parse(String(数据))
       if (o.回复冷却秒 === undefined) o.回复冷却秒 = 0
@@ -315,6 +317,7 @@ writeFileSync(join(家, 'qq-bridge-config.json'), JSON.stringify({ 合并窗口�
 }, null, 2), 'utf8')
 
 let 收到 = await 收({ text: '宝宝你在吗' })
+报('/receive 不携带可信身份', !转进的.at(-1)?.source?.messageId)
 报('/receive：把进来那句话 followup 进会话', 收到 && 收到.ok === true && 转进的.length === 1, JSON.stringify(收到))
 if (转进的[0]) {
   const m = 转进的[0]
@@ -400,6 +403,7 @@ const 之前转 = 转进的.length
 私聊消息时间 = Math.floor(Date.now() / 1000) + 100
 await 轮询回调()
 await new Promise((r) => setTimeout(r, 20))
+报('可信轮询携带机器人、私聊与消息凭据', 转进的.at(-1)?.source?.botId === '10001' && 转进的.at(-1)?.source?.chatId === '123' && 转进的.at(-1)?.source?.messageId === 转进的.at(-1)?.id)
 报('轮询收消息 → 她新发的私聊被 followup 进 DSH', 转进的.length === 之前转 + 1 && JSON.stringify(转进的.at(-1).content[0].text).includes('宝宝你在吗'), JSON.stringify(转进的.at(-1)))
 // 再跑一次同一条：不该重复转
 私聊消息文本 = '宝宝你在吗'
@@ -514,9 +518,7 @@ writeFileSync(join(家, 'qq-bridge-config.json'), JSON.stringify({ 合并窗口�
 监听[0](会话, 助手消息(22, 1, [块('text', '同一间屋')], false))
 监听[0](会话, 转完(22))
 await new Promise((r) => setTimeout(r, 30))
-报('同一间会话绑两条 → 私聊和群都发', 发了.length === 2
-  && 发了.some((x) => x.url.endsWith('/send_private_msg'))
-  && 发了.some((x) => x.url.endsWith('/send_group_msg')), 发了.map((x) => x.url).join(','))
+报('同一间会话绑两条 → 拒绝广播', 发了.length === 0)
 
 // ⑲b 其中一条被关掉 → 只发开着的那条（用群那间会话，别动 session-X 的状态）
 writeFileSync(join(家, 'qq-bridge-config.json'), JSON.stringify({ 合并窗口秒: 0,
@@ -531,8 +533,7 @@ writeFileSync(join(家, 'qq-bridge-config.json'), JSON.stringify({ 合并窗口�
 监听[0](假群agent.session, 助手消息(23, 1, [块('text', '只发开着的那条')], false))
 监听[0](假群agent.session, 转完(23))
 await new Promise((r) => setTimeout(r, 30))
-报('同一间会话绑两个群、其中一个关掉 → 只发开着那个', 发了.length === 1
-  && String(发了[0].体.group_id) === '456', JSON.stringify(发了.map((x) => [x.url.slice(-12), x.体 && x.体.group_id])))
+报('同一间会话绑两个群、其中一个关掉 → 仍拒绝歧义绑定', 发了.length === 0)
 
 // ⑳ 称呼分两套：私聊用「私聊称呼」，群里用「群称呼」（群里不止一个人）
 // ⚠ 1.4.3：群显式设「全听」，理由同 ⑰（去掉「自己直接放行」的短路）。
