@@ -156,6 +156,18 @@ if (空间钮) {
   const 缺4 = 要有4.filter((x) => !文4.includes(x))
   报('空间区域保留全部关键控件', 缺4.length === 0, 缺4.length ? '缺：' + 缺4.join('、') : 文4.length + ' 字节')
   报('配置页出现文件、存储、表情与代写入口', ['文件、存储与表情', '文件接收与本地存储', '表情包', 'AI 代写角色设定'].every(x => 文4.includes(x)))
+  const 加映射 = 找按钮(树4, '+ 添加条目')
+  if (加映射) {
+    加映射.p.onClick(); 下标 = 0
+    const 新建树 = 组件()
+    const 新建文 = JSON.stringify(新建树)
+    const 弹窗节点 = 找控件(新建树, n => n.p?.role === 'dialog')[0]
+    const 弹窗文 = JSON.stringify(弹窗节点)
+    报('新增映射使用竖向模态框且不显示目标会话',
+      弹窗文.includes('添加映射') && 弹窗文.includes('类型') && 弹窗文.includes('群号') && 弹窗文.includes('群名')
+      && !找控件(弹窗节点, n => String(n.p?.['aria-label'] || '').includes('目标会话') || String(n.p?.className || '').includes('qq-bind-session')).length)
+    找按钮(新建树, '取消')?.p.onClick()
+  }
   报('定时条目保留时间、可见范围、开关与删除操作',
     Boolean(找控件(树4, (n) => n.t === 'input' && n.p.type === 'time').length)
       && Boolean(找控件(树4, (n) => n.t === 'select').length)
