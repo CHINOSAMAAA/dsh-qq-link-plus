@@ -1,3 +1,7 @@
+## Plus 1.5.1-5 — 2026-11-07
+
+- 绑定工作区后，QQ 互通内所有会话选择只列出该工作区下的会话；未绑定工作区时保持原行为。
+
 ## Plus 1.5.1-4 — 2026-11-07
 
 - 同步 AIO 新增的 QQ 文件接收、图片/文件本地归档与工作区绑定能力；新增 `workspace.mjs`、`media-storage.mjs`、`inbound-files.mjs`、`onebot-file-events.mjs`、`onebot-file-stream.mjs`、`docker-onebot.mjs`。
