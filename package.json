@@ -1,6 +1,6 @@
 {
   "name": "dsh-qq-link-plus",
-  "version": "1.5.1-3",
+  "version": "1.5.1-4",
   "description": "派生自 Yuuyuko-uu/dsh-qq-link：QQ 双向互通、会话映射及 QQ 历史分段阅读与鱼的记忆对接。",
   "scripts": {
     "test": "node --test tests/*.mjs"

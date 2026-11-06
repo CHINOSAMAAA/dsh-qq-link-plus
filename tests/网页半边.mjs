@@ -32,6 +32,7 @@ const 造React = () => ({
     return [状态槽[i], (v) => { 状态槽[i] = typeof v === 'function' ? v(状态槽[i]) : v }]
   },
   useEffect: () => {},
+  useRef: (v) => ({ current: v }),
   useCallback: (f) => f,
 })
 const 假require = (n) => {
@@ -154,6 +155,7 @@ if (空间钮) {
     '同步间隔（分钟）', '自动点赞', '允许评论']
   const 缺4 = 要有4.filter((x) => !文4.includes(x))
   报('空间区域保留全部关键控件', 缺4.length === 0, 缺4.length ? '缺：' + 缺4.join('、') : 文4.length + ' 字节')
+  报('配置页出现文件、存储、表情与代写入口', ['文件、存储与表情', '文件接收与本地存储', '表情包', 'AI 代写角色设定'].every(x => 文4.includes(x)))
   报('定时条目保留时间、可见范围、开关与删除操作',
     Boolean(找控件(树4, (n) => n.t === 'input' && n.p.type === 'time').length)
       && Boolean(找控件(树4, (n) => n.t === 'select').length)

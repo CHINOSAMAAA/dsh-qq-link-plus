@@ -1,3 +1,11 @@
+## Plus 1.5.1-4 — 2026-11-07
+
+- 同步 AIO 新增的 QQ 文件接收、图片/文件本地归档与工作区绑定能力；新增 `workspace.mjs`、`media-storage.mjs`、`inbound-files.mjs`、`onebot-file-events.mjs`、`onebot-file-stream.mjs`、`docker-onebot.mjs`。
+- 同步表情库：自动发送/收藏/打标签/分类、素材导入、素材目录与打开文件夹；新增 `stickers.mjs`。
+- 同步角色 AI 代写接口与 `hostdeps.mjs`；设置页以原 Plus 风格增加「文件、存储与表情」和「AI 代写角色设定」。
+- 保留 Plus 自己的检查更新通道；新增 `/logs`、`/role-draft`、`/media-storage`、`/stickers`、`/open-folder` 等宿主路由。
+- 测试：全量 18 项通过。
+
 ## Plus 1.5.1-3 — 2026-11-05
 
 - 每个聊天独占 DSH 会话；保存时拒绝重复绑定，旧歧义配置在收发两端均拒绝，取消多聊天回复广播。
