@@ -51,7 +51,7 @@ dsh plugin --profile web add github:CHINOSAMAAA/dsh-fish-memory-plus
 
 桌面版通过应用内插件管理器操作，安装后按宿主提示重载或重启。
 
-> 同一环境只启用一套 QQ 与记忆插件。原版、Plus 和已内置这两个模块的 [大肥鱼整合包](https://github.com/CHINOSAMAAA/dsh-big-flsh-aio) 共用部分接口及数据路径，不能同时启用。
+> 同一环境只启用一套 QQ 与记忆插件。原版、Plus 和已内置这两个模块的 [大肥鱼整合包](https://github.com/CHINOSAMAAA/dsh-big-fish-aio) 共用部分接口及数据路径，不能同时启用。
 
 ### 导入历史聊天
 
