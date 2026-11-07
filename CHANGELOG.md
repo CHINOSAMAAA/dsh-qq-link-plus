@@ -1,3 +1,7 @@
+## Plus 1.5.1-10 — 2026-11-07
+
+- 修复旧版本生成的不可见 `session-N` 绑定：读取状态时自动补建 Agent 并回写新会话 ID；新建映射会校验 Agent 已注册。
+
 ## Plus 1.5.1-9 — 2026-11-07
 
 - 新增映射自动创建改为真正的 Agent（`ctx.agents.create`），写入绑定工作区 cwd 与 `session/title`；创建后可在 DSH 工作区直接打开。
